@@ -114,7 +114,7 @@ def dijkstra(orig, dest, plot=False):
         if node == dest:
             if plot:
                 print("Iteraciones:", step)
-                plot_graph()
+                plot_state(step, G)
         if G.nodes[node]["visited"]:
             continue
         G.nodes[node]["visited"] = True
@@ -162,8 +162,7 @@ end = random.choice(list(G.nodes))
 
 dijkstra(start, end, plot=True)
 with imageio.get_writer("path_animation.gif", mode="I") as writer:
-    for i, state in enumerate(states):
-        filename = plot_state(i, state)
-        image = imageio.imread(filename)
+    for state in states:
+        image = imageio.imread(state)
         writer.append_data(image)
         # os.remove(filename)  # Optionally, remove the frame files
