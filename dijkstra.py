@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 place_name = "La Paz, Bolivia"
 G = ox.graph_from_place(place_name, network_type="drive")
 
+states = []
+
 for edge in G.edges:
     # Cleaning the "maxspeed" attribute, some values are lists, some are strings, some are None
     maxspeed = 40
@@ -79,6 +81,7 @@ def plot_state(step, state):
         save=True,
         filepath=f"frames/{filename}",
     )
+    states.append(f"frames/{filename}")
     return f"frames/{filename}"
 
 
@@ -94,7 +97,6 @@ def plot_heatmap(algorithm):
 
 
 def dijkstra(orig, dest, plot=False):
-    frames = []
     for node in G.nodes:
         G.nodes[node]["visited"] = False
         G.nodes[node]["distance"] = float("inf")
@@ -113,7 +115,6 @@ def dijkstra(orig, dest, plot=False):
             if plot:
                 print("Iteraciones:", step)
                 plot_graph()
-                return frames
         if G.nodes[node]["visited"]:
             continue
         G.nodes[node]["visited"] = True
@@ -127,7 +128,8 @@ def dijkstra(orig, dest, plot=False):
                 heapq.heappush(pq, (G.nodes[neighbor]["distance"], neighbor))
                 for edge2 in G.out_edges(neighbor):
                     style_active_edge((edge2[0], edge2[1], 0))
-        frames.append(G.copy())
+        if step % 500 == 0:
+            plot_state(step, G)
         step += 1
 
 
@@ -158,10 +160,10 @@ def reconstruct_path(orig, dest, plot=False, algorithm=None):
 start = random.choice(list(G.nodes))
 end = random.choice(list(G.nodes))
 
-states = dijkstra(start, end, plot=True)
+dijkstra(start, end, plot=True)
 with imageio.get_writer("path_animation.gif", mode="I") as writer:
     for i, state in enumerate(states):
         filename = plot_state(i, state)
         image = imageio.imread(filename)
         writer.append_data(image)
-        #os.remove(filename)  # Optionally, remove the frame files
+        # os.remove(filename)  # Optionally, remove the frame files
