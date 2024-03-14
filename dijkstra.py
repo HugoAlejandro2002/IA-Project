@@ -1,12 +1,12 @@
 import osmnx as ox
-import networkx as nx
 import random
 import heapq
-import imageio
+import imageio.v3 as imageio
+import shutil
 import os
 
-## Libraries to animate the analysis
-import matplotlib.pyplot as plt
+if os.path.isdir('frames'):
+    shutil.rmtree('frames')
 
 place_name = "La Paz, Bolivia"
 G = ox.graph_from_place(place_name, network_type="drive")
@@ -66,9 +66,10 @@ def plot_graph():
     )
 
 
-def plot_state(step, state):
-    filename = f"frame_{step:05d}.png"
-    fig, ax = ox.plot_graph(
+def plot_state(step, state, alg):
+    filename = f"frame_{step:05d}.png"        
+    filepath=f"frames/{alg}/{filename}"
+    ox.plot_graph(
         state,
         node_size=[state.nodes[node]["size"] for node in state.nodes],
         edge_color=[state.edges[edge]["color"] for edge in state.edges],
@@ -79,11 +80,10 @@ def plot_state(step, state):
         figsize=(20, 20),
         show=False,
         save=True,
-        filepath=f"frames/{filename}",
+        close=True,
+        filepath=filepath,
     )
-    states.append(f"frames/{filename}")
-    return f"frames/{filename}"
-
+    states.append(filepath)
 
 def plot_heatmap(algorithm):
     edge_colors = ox.plot.get_edge_colors_by_attr(G, f"{algorithm}_uses", cmap="hot")
@@ -97,6 +97,7 @@ def plot_heatmap(algorithm):
 
 
 def dijkstra(orig, dest, plot=False):
+    alg = "build-dijkstra"
     for node in G.nodes:
         G.nodes[node]["visited"] = False
         G.nodes[node]["distance"] = float("inf")
@@ -114,7 +115,9 @@ def dijkstra(orig, dest, plot=False):
         if node == dest:
             if plot:
                 print("Iteraciones:", step)
-                plot_state(step, G)
+                plot_state(step, G, alg)
+                create_gif(states, alg)
+                return
         if G.nodes[node]["visited"]:
             continue
         G.nodes[node]["visited"] = True
@@ -128,15 +131,16 @@ def dijkstra(orig, dest, plot=False):
                 heapq.heappush(pq, (G.nodes[neighbor]["distance"], neighbor))
                 for edge2 in G.out_edges(neighbor):
                     style_active_edge((edge2[0], edge2[1], 0))
-        if step % 500 == 0:
-            plot_state(step, G)
+        if step % 300 == 0:
+            plot_state(step, G, alg)
         step += 1
 
 
 def reconstruct_path(orig, dest, plot=False, algorithm=None):
+    alg = "reconstruct-dijkstra"
     for edge in G.edges:
         style_unvisited_edge(edge)
-    dist = 0
+    dist = step = 0
     speeds = []
     curr = dest
     while curr != orig:
@@ -149,20 +153,27 @@ def reconstruct_path(orig, dest, plot=False, algorithm=None):
                 G.edges[(prev, curr, 0)].get(f"{algorithm}_uses", 0) + 1
             )
         curr = prev
+        if step % 5 == 0:
+           plot_state(step, G, alg)
+        step += 1
+    plot_state(step, G, alg)
     dist /= 1000
     if plot:
         print(f"Distance: {dist}")
         print(f"Avg. speed: {sum(speeds)/len(speeds)}")
         print(f"Total time: {dist/(sum(speeds)/len(speeds)) * 60}")
-        plot_graph()
+        create_gif(states, alg)
+
+def create_gif(filename):
+    frames = []
+    for image in states:
+        frames.append(imageio.imread(image))
+    imageio.imwrite(f"{filename}.gif", frames, duration = 250, loop = 0)
+    states.clear()  
 
 
 start = random.choice(list(G.nodes))
 end = random.choice(list(G.nodes))
 
 dijkstra(start, end, plot=True)
-with imageio.get_writer("path_animation.gif", mode="I") as writer:
-    for state in states:
-        image = imageio.imread(state)
-        writer.append_data(image)
-        # os.remove(filename)  # Optionally, remove the frame files
+reconstruct_path(start, end, plot=True)

@@ -1,2 +1,5 @@
+venv
 cache
 .git
+frames
+*.gif
