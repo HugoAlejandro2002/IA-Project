@@ -20,24 +20,28 @@ def style_unvisited_edge(edge):
     G.edges[edge]["alpha"] = 0.2
     G.edges[edge]["linewidth"] = 0.5
 
+
 def style_visited_edge(edge):
     G.edges[edge]["color"] = "#d36206"
     G.edges[edge]["alpha"] = 1
     G.edges[edge]["linewidth"] = 1
+
 
 def style_active_edge(edge):
     G.edges[edge]["color"] = "#e8a900"
     G.edges[edge]["alpha"] = 1
     G.edges[edge]["linewidth"] = 1
 
+
 def style_path_edge(edge):
     G.edges[edge]["color"] = "white"
     G.edges[edge]["alpha"] = 1
     G.edges[edge]["linewidth"] = 1
 
+
 def plot_state(step, state, alg):
-    filename = f"frame_{step:05d}.png"        
-    filepath=f"frames/{alg}/{filename}"
+    filename = f"frame_{step:05d}.png"
+    filepath = f"frames/{alg}/{filename}"
     ox.plot_graph(
         state,
         node_size=[state.nodes[node]["size"] for node in state.nodes],
@@ -54,6 +58,7 @@ def plot_state(step, state, alg):
     )
     states.append(filepath)
 
+
 def plot_heatmap(algorithm):
     edge_colors = ox.plot.get_edge_colors_by_attr(G, f"{algorithm}_uses", cmap="hot")
     fig, _ = ox.plot_graph(
@@ -65,19 +70,26 @@ def plot_heatmap(algorithm):
     )
 
 
-def dijkstra(orig, dest, plot=False):
-    alg = "build-dijkstra"
+def distance(node1, node2):
+    x1, y1 = G.nodes[node1]["x"], G.nodes[node1]["y"]
+    x2, y2 = G.nodes[node2]["x"], G.nodes[node2]["y"]
+    return ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
+
+
+def a_star(orig, dest, plot=False):
+    alg = "build-a-star"
     for node in G.nodes:
-        G.nodes[node]["visited"] = False
-        G.nodes[node]["distance"] = float("inf")
         G.nodes[node]["previous"] = None
         G.nodes[node]["size"] = 0
+        G.nodes[node]["g_score"] = float("inf")
+        G.nodes[node]["f_score"] = float("inf")
     for edge in G.edges:
         style_unvisited_edge(edge)
-    G.nodes[orig]["distance"] = 0
     G.nodes[orig]["size"] = 50
     G.nodes[dest]["size"] = 50
-    pq = [(0, orig)]
+    G.nodes[orig]["g_score"] = 0
+    G.nodes[orig]["f_score"] = distance(orig, dest)
+    pq = [(G.nodes[orig]["f_score"], orig)]
     step = 0
     while pq:
         _, node = heapq.heappop(pq)
@@ -86,27 +98,27 @@ def dijkstra(orig, dest, plot=False):
                 print("Iteraciones:", step)
                 plot_state(step, G, alg)
                 create_gif(alg)
-                return
-        if G.nodes[node]["visited"]:
-            continue
-        G.nodes[node]["visited"] = True
+            return
         for edge in G.out_edges(node):
             style_visited_edge((edge[0], edge[1], 0))
             neighbor = edge[1]
-            weight = G.edges[(edge[0], edge[1], 0)]["weight"]
-            if G.nodes[neighbor]["distance"] > G.nodes[node]["distance"] + weight:
-                G.nodes[neighbor]["distance"] = G.nodes[node]["distance"] + weight
+            tentative_g_score = G.nodes[node]["g_score"] + distance(node, neighbor)
+            if tentative_g_score < G.nodes[neighbor]["g_score"]:
                 G.nodes[neighbor]["previous"] = node
-                heapq.heappush(pq, (G.nodes[neighbor]["distance"], neighbor))
+                G.nodes[neighbor]["g_score"] = tentative_g_score
+                G.nodes[neighbor]["f_score"] = tentative_g_score + distance(
+                    neighbor, dest
+                )
+                heapq.heappush(pq, (G.nodes[neighbor]["f_score"], neighbor))
                 for edge2 in G.out_edges(neighbor):
                     style_active_edge((edge2[0], edge2[1], 0))
-        if step % 300 == 0:
+        if step % 100 == 0:
             plot_state(step, G, alg)
         step += 1
 
 
 def reconstruct_path(orig, dest, plot=False, algorithm=None):
-    alg = "reconstruct-dijkstra"
+    alg = "reconstruct-a-star"
     for edge in G.edges:
         style_unvisited_edge(edge)
     dist = step = 0
@@ -123,7 +135,7 @@ def reconstruct_path(orig, dest, plot=False, algorithm=None):
             )
         curr = prev
         if step % 5 == 0:
-           plot_state(step, G, alg)
+            plot_state(step, G, alg)
         step += 1
     plot_state(step, G, alg)
     dist /= 1000
@@ -133,15 +145,17 @@ def reconstruct_path(orig, dest, plot=False, algorithm=None):
         print(f"Total time: {dist/(sum(speeds)/len(speeds)) * 60}")
         create_gif(alg)
 
+
 def create_gif(filename):
     frames = []
     for image in states:
         frames.append(imageio.imread(image))
-    imageio.imwrite(f"{filename}.gif", frames, duration = 250, loop = 0)
-    states.clear()  
+    imageio.imwrite(f"{filename}.gif", frames, duration=250, loop=0)
+    states.clear()
 
-def init_dijkstra(start_node, end_node, G_data):
+
+def init_a_star(start_node, end_node, G_data):
     global G
     G = G_data
-    dijkstra(start_node, end_node, plot=True)
+    a_star(start_node, end_node, plot=True)
     reconstruct_path(start_node, end_node, plot=True)
