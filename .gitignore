@@ -1,0 +1,6 @@
+venv
+cache
+.git
+frames
+*.gif
+__pycache__
