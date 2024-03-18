@@ -7,7 +7,7 @@ import numpy as np
 from dijkstra import init_dijkstra
 from a_star import init_a_star
 
-from haversine import haversine, Unit
+from haversine import haversine
 
 def get_street_info(G, query):
     lat, lon = ox.geocode(query)
