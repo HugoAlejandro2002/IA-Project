@@ -2,6 +2,8 @@ import osmnx as ox
 import heapq
 import imageio.v3 as imageio
 
+from colors import *
+
 ## Si se desea probar el código por separado descomentar las siguientes líneas 
 
 # import shutil
@@ -16,25 +18,25 @@ G = None
 states = []
 
 def style_unvisited_edge(edge):
-    G.edges[edge]["color"] = "#d36206"
+    G.edges[edge]["color"] = UNVISITED_EDGE_COLOR
     G.edges[edge]["alpha"] = 0.2
     G.edges[edge]["linewidth"] = 0.5
 
 
 def style_visited_edge(edge):
-    G.edges[edge]["color"] = "#d36206"
+    G.edges[edge]["color"] = VISITED_EDGE_COLOR
     G.edges[edge]["alpha"] = 1
     G.edges[edge]["linewidth"] = 1
 
 
 def style_active_edge(edge):
-    G.edges[edge]["color"] = "#e8a900"
+    G.edges[edge]["color"] = ACTIVE_EDGE_COLOR
     G.edges[edge]["alpha"] = 1
     G.edges[edge]["linewidth"] = 1
 
 
 def style_path_edge(edge):
-    G.edges[edge]["color"] = "white"
+    G.edges[edge]["color"] = PATH_EDGE_COLOR
     G.edges[edge]["alpha"] = 1
     G.edges[edge]["linewidth"] = 1
 
@@ -48,8 +50,8 @@ def plot_state(step, state, alg):
         edge_color=[state.edges[edge]["color"] for edge in state.edges],
         edge_alpha=[state.edges[edge]["alpha"] for edge in state.edges],
         edge_linewidth=[state.edges[edge]["linewidth"] for edge in state.edges],
-        node_color="white",
-        bgcolor="#18080e",
+        node_color=PATH_EDGE_COLOR ,
+        bgcolor=BG_COLOR,
         figsize=(20, 20),
         show=False,
         save=True,
@@ -66,7 +68,7 @@ def plot_heatmap(algorithm):
         node_size=0,
         edge_color=edge_colors,
         # bgcolor="#9a9745"
-        bgcolor="#18080e",
+        bgcolor=BG_COLOR,
     )
 
 

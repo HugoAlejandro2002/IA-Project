@@ -2,9 +2,31 @@ import osmnx as ox
 import shutil
 import os
 import random
+import numpy as np
 
 from dijkstra import init_dijkstra
 from a_star import init_a_star
+
+from haversine import haversine, Unit
+
+def get_street_info(G, query):
+    lat, lon = ox.geocode(query)
+    # print(lat, lon)
+    min_dist = np.inf
+    nearest_node = None
+    
+    for node in list(G.nodes):
+        node_lat = G.nodes[node]['y']
+        node_lon = G.nodes[node]['x']
+        
+        dist = haversine((lat, lon), (node_lat, node_lon))
+        
+        if dist < min_dist:
+            min_dist = dist
+            nearest_node = node
+    
+    return nearest_node
+
 
 if __name__ == "__main__":
     if os.path.isdir('frames'):
@@ -28,8 +50,14 @@ if __name__ == "__main__":
         # Adding the "weight" attribute (time = distance / speed)
         G.edges[edge]["weight"] = G.edges[edge]["length"] / maxspeed
     
-    start = random.choice(list(G.nodes))
-    end = random.choice(list(G.nodes))
+
+    # start = random.choice(list(G.nodes))
+    # end =  random.choice(list(G.nodes))
+        
+    start = get_street_info(G, input())
+    end = get_street_info(G, input())
+
+    # print(start, end)
     
     init_dijkstra(start, end, G)
     init_a_star(start, end, G)
