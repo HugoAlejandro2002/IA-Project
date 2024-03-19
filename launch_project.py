@@ -54,8 +54,8 @@ if __name__ == "__main__":
     # start = random.choice(list(G.nodes))
     # end =  random.choice(list(G.nodes))
         
-    start = get_street_info(G, input())
-    end = get_street_info(G, input())
+    start = get_street_info(G, input("Inserte desde donde quiere partir:\n"))
+    end = get_street_info(G, input("Inserte hasta donde quiere partir:\n"))
 
     # print(start, end)
     
