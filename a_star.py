@@ -36,7 +36,7 @@ def style_active_edge(edge):
 
 
 def style_path_edge(edge):
-    G.edges[edge]["color"] = PATH_EDGE_COLOR
+    G.edges[edge]["color"] = PATH_EDGE_COLOR_2
     G.edges[edge]["alpha"] = 1
     G.edges[edge]["linewidth"] = 1
 
@@ -50,7 +50,7 @@ def plot_state(step, state, alg):
         edge_color=[state.edges[edge]["color"] for edge in state.edges],
         edge_alpha=[state.edges[edge]["alpha"] for edge in state.edges],
         edge_linewidth=[state.edges[edge]["linewidth"] for edge in state.edges],
-        node_color=PATH_EDGE_COLOR ,
+        node_color=PATH_EDGE_COLOR_2 ,
         bgcolor=BG_COLOR,
         figsize=(20, 20),
         show=False,
